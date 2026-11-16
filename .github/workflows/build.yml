@@ -1,33 +1,39 @@
-name: Build Linux AppImage for ungoogled-chromium
+name: Build Linux binaries of FacetBrowser Engine
 on:
-  push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+.[0-9]+-[0-9]+'
+  workflow_dispatch:
+    inputs:
+      resume_run_id:
+        description: Continue from the build cache of this run id instead of starting from scratch
+        type: string
+        required: false
+        default: ''
+      engine_ref:
+        description: Branch, tag or commit of the engine repository to build instead of the pinned submodule
+        type: string
+        required: false
+        default: ''
+      preflight_only:
+        description: Stop after compiling the files the engine patches change
+        type: boolean
+        required: false
+        default: false
 
 permissions:
-  contents: write
+  contents: read
+  # To download the build cache of the run that is continued
+  actions: read
+
+concurrency:
+  group: build-${{ github.ref }}-${{ inputs.engine_ref }}
+  cancel-in-progress: false
 
 jobs:
   build:
-    name: Build ungoogled-chromium binaries and AppImage
-    strategy:
-      matrix:
-        arch: [arm64, x86_64]
-      max-parallel: 2
-      fail-fast: true
+    name: Build (x86_64)
     uses: ./.github/workflows/build-steps.yml
     with:
-      arch: ${{ matrix.arch }}
+      arch: x86_64
       runs-on: ubuntu-latest
-
-  release:
-    name: Create release
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-      - uses: ./.github/actions/release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      resume_run_id: ${{ inputs.resume_run_id }}
+      engine_ref: ${{ inputs.engine_ref }}
+      preflight_only: ${{ inputs.preflight_only }}

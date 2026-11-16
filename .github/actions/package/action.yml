@@ -1,9 +1,17 @@
-name: Package AppImage
-description: Package ungoogled-chromium as AppImage and tar.xz, upload artifacts
+name: Package tar.xz
+description: Package the build as tar.xz, upload the artifact
 
 runs:
   using: composite
   steps:
+    - name: Use another engine revision
+      if: ${{ env.ENGINE_REF != '' }}
+      shell: bash
+      run: |
+        git -C ungoogled-chromium fetch --depth 1 origin "$ENGINE_REF"
+        git -C ungoogled-chromium checkout --detach FETCH_HEAD
+        git -C ungoogled-chromium log --oneline -1
+
     - uses: docker/setup-buildx-action@v3
 
     - name: Download build cache
@@ -16,7 +24,7 @@ runs:
       shell: bash
       run: bash ./.github/scripts/import-cache.sh
 
-    - name: Package as AppImage with Docker
+    - name: Package as tar.xz with Docker
       shell: bash
       run: bash ./package/docker-package.sh
 
@@ -34,14 +42,6 @@ runs:
         echo "version=${version}" >> $GITHUB_OUTPUT
         echo "chromium_version=${chromium_version}" >> $GITHUB_OUTPUT
         echo "ungoogled_revision=${ungoogled_revision}" >> $GITHUB_OUTPUT
-
-    - name: Upload AppImage artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ungoogled-chromium-${{ steps.version.outputs.version }}-${{ env.ARCH }}-AppImage
-        path: build/release/ungoogled-chromium-${{ steps.version.outputs.version }}-${{ env.ARCH }}.AppImage*
-        if-no-files-found: error
-        compression-level: 0
 
     - name: Upload tar.xz artifact
       uses: actions/upload-artifact@v4

@@ -1,3 +1,24 @@
+# FacetBrowser Engine: Linux packaging
+
+This is a fork of [ungoogled-chromium-portablelinux](https://github.com/ungoogled-software/ungoogled-chromium-portablelinux)
+that builds [FacetBrowser Engine](https://github.com/noneym/facetbrowser-engine) for Linux x86_64
+on GitHub's own runner. The engine repository is the `ungoogled-chromium` submodule.
+
+What differs from upstream:
+
+- The build is started by hand (`Build Linux binaries of FacetBrowser Engine` workflow). It can
+  continue from the build cache of another run (`resume_run_id`), build another revision of the
+  engine (`engine_ref`), and stop after compiling the files the engine patches change (`preflight_only`).
+- The files changed by the engine patches are compiled first, so that an error in a patch shows
+  up in the first job.
+- Only the `tar.xz` is produced, not the AppImage. It contains `chrome` and `chromedriver`.
+- The `tar.xz` is tested in a Debian bookworm container (`Test a Linux build of FacetBrowser Engine` workflow).
+- No release is created by the workflow.
+
+The upstream README follows.
+
+---
+
 # ungoogled-chromium-portablelinux
 Portable Linux (`.AppImage`) packaging for [ungoogled-chromium](https://github.com/ungoogled-software/ungoogled-chromium).
 

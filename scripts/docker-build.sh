@@ -23,6 +23,7 @@ _extra_env=()
 [ -n "${_gha_final:-}" ] && _extra_env+=(-e _gha_final)
 [ -n "${GITHUB_OUTPUT:-}" ] && _extra_env+=(-e GITHUB_OUTPUT)
 [ -n "${ARCH:-}" ] && _extra_env+=(-e ARCH)
+[ -n "${FACET_PREFLIGHT_ONLY:-}" ] && _extra_env+=(-e FACET_PREFLIGHT_ONLY)
 
 # match host user to avoid permission issues on bind mount
 _user_uidgid="$(id -u):$(id -g)"
