@@ -1,4 +1,5 @@
 name: Test a Linux build of FacetBrowser Engine
+run-name: Test the tar.xz of run ${{ inputs.run_id }}
 on:
   workflow_dispatch:
     inputs:

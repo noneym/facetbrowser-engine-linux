@@ -1,4 +1,5 @@
 name: Build Linux binaries of FacetBrowser Engine
+run-name: Build ${{ inputs.engine_ref || github.ref_name }}${{ inputs.preflight_only && ' (preflight only)' || '' }}${{ inputs.resume_run_id && format(' (continues {0})', inputs.resume_run_id) || '' }}
 on:
   workflow_dispatch:
     inputs:
