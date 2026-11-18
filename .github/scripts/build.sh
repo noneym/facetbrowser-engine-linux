@@ -1,12 +1,20 @@
 #!/bin/bash
 set -euxo pipefail
 
+clone=false
+use_gentoo_source_tar=false
+if [[ "${1:-}" == "-c" ]]; then
+    clone=true
+elif [[ "${1:-}" == "-g" ]]; then
+    use_gentoo_source_tar=true
+fi
+
 . "/repo/scripts/shared.sh"
 
 setup_paths
 
 if [ "$_prepare_only" = true ]; then
-    fetch_sources false
+    fetch_sources "$clone" "$use_gentoo_source_tar"
     apply_patches
     apply_domsub
     write_gn_args

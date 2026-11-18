@@ -43,21 +43,27 @@ setup_paths() {
 
 fetch_sources() {
     local use_clone="${1:-false}"
-    local stamp="${_src_dir}/.downloaded.stamp"
+	local use_gentoo_source_tar="${2:-false}"
 
+    local stamp="${_src_dir}/.downloaded.stamp"
     if [ -f "${stamp}" ]; then
         echo "Sources already present, skipping download/unpack"
         return 0
     fi
 
     if ${use_clone}; then
-        _host_arch_clone="$_host_arch"
+        _host_arch_clone="$_build_arch"
         if [ "$_host_arch_clone" = x64 ]; then
             _host_arch_clone="amd64"
         fi
 
         "${_main_repo}/utils/clone.py" --sysroot "$_host_arch_clone" -o "${_src_dir}"
     else
+		if ${use_gentoo_source_tar}; then
+			# replace url and filename to switch to gentoo's chromium source tar
+			sed -i 's|https://commondatastorage.googleapis.com/chromium-browser-official|https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/download/%(_chromium_version)s|g' "${_main_repo}/downloads.ini"
+			sed -i 's|chromium-%(_chromium_version)s-lite.tar.xz|chromium-%(_chromium_version)s-linux.tar.xz|g' "${_main_repo}/downloads.ini"
+		fi
         "${_main_repo}/utils/downloads.py" retrieve -i "${_main_repo}/downloads.ini" -c "${_dl_cache}"
         "${_main_repo}/utils/downloads.py" unpack -i "${_main_repo}/downloads.ini" -c "${_dl_cache}" "${_src_dir}"
     fi
@@ -111,6 +117,12 @@ setup_toolchain() {
     if [ "$_host_arch" = x64 ]; then
         "${_src_dir}/tools/rust/update_rust.py"
         "${_src_dir}/tools/clang/scripts/update.py"
+
+        # Since Chromium 157 the build needs Crubit's cc_bindings_from_rs.
+        # Google's Rust toolchain package for x86_64 Linux contains it, so
+        # nothing is built or patched out here; this only makes a missing or
+        # unusable tool show up before the build starts.
+        "${_src_dir}/third_party/rust-toolchain/bin/cc_bindings_from_rs" --help > /dev/null
     else
         "${_src_dir}/tools/clang/scripts/build.py" \
             --without-fuchsia --without-android --disable-asserts \
@@ -136,6 +148,14 @@ setup_toolchain() {
     ln -sf "$(which node)" "${_src_dir}/third_party/node/linux/node-linux-x64/bin/node"
     mkdir -p "${_src_dir}/third_party/gperf/cipd/bin/"
     ln -sf "$(which gperf)" "${_src_dir}/third_party/gperf/cipd/bin/gperf"
+    mkdir -p "${_src_dir}/third_party/dawn/tools/golang/linux-amd64/bin"
+    ln -sf "$(which go)" "${_src_dir}/third_party/dawn/tools/golang/linux-amd64/bin/go"
+	mkdir -p "${_src_dir}/buildtools/linux64-format"
+	ln -sf "$(which clang-format)" "${_src_dir}/buildtools/linux64-format/clang-format"
+    rm -rf "${_src_dir}/third_party/devtools-frontend/src/node_modules/esbuild/"
+    ln -s /usr/lib/node_modules/esbuild/ "${_src_dir}/third_party/devtools-frontend/src/node_modules/esbuild"
+    mkdir -p "${_src_dir}/third_party/typescript/linux-amd64/src/lib"
+	ln -sf "$(which tsc)" "${_src_dir}/third_party/typescript/linux-amd64/src/lib/tsc"
 
     local clang_bin="${_src_dir}/third_party/llvm-build/Release+Asserts/bin"
     export CC="${clang_bin}/clang"
