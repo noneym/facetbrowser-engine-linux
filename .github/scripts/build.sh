@@ -51,7 +51,7 @@ else
     # is built twice: the objects are part of the normal build.
     _preflight_marker="out/Default/facet_preflight.done"
     if [ ! -f "$_preflight_marker" ]; then
-        if ninja -C out/Default -t inputs chrome > /tmp/facet_preflight_inputs.txt; then
+        if ninja -C out/Default -t inputs chrome chromedriver > /tmp/facet_preflight_inputs.txt; then
             python3 "${_root}/.github/scripts/facet_preflight.py" "${_main_repo}/patches" \
                 /tmp/facet_preflight_inputs.txt > /tmp/facet_preflight_targets.txt
             echo "Preflight: compiling $(wc -l < /tmp/facet_preflight_targets.txt) patched files first"
